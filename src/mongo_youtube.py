@@ -1,15 +1,7 @@
-# -*- coding: utf-8 -*-
-# Code to insert youtube_comments_clean.csv into mongodb
-
-# Import Packages
 from dotenv import load_dotenv
 import os
 import pymongo
 import pandas as pd
-
-# Import Utils
-from scrape_youtube import scrape_videos, scrape_youtube
-from process_youtube import process_data
 
 def call_mongo():
     # load onto MongoDB
@@ -25,30 +17,25 @@ def call_mongo():
     return client.comments
     
 # check if csv data exists on mongodb
-def filter_urls(urls_titles):
+def filter_urls(video_list):
     
     db = call_mongo()
     youtube_collection = db.youtube_collection
     
     # extract urls/titles
-    urls = urls_titles["urls"]
-    titles = urls_titles["titles"]
     
-    for count, url in enumerate(urls):
-        title=titles[count]
+    for index, video in enumerate(video_list):
+        url = video_list['url']
         num = youtube_collection.count_documents({'url': url})
         
         # remove title if data already exists
         if num > 0:
-            print("skipping ", titles[count])
-            urls[count] = None
-            titles[count] = None
+            print("skipping ", video['title'])
+            video_list.pop(index)
         else:
-            print("confirming ", title)
-    # Eliminate the skipped values from list
-    urls=[url for url in urls if url != None]
-    titles=[title for title in titles if title != None]
-    return {'urls' : urls, 'titles': titles}
+            print("confirming ", video['title'])
+    
+    return video_list
 
 # upload cleaned csv data onto mongodb
 def upload_data():
